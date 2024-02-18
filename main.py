@@ -5,6 +5,7 @@ from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
+from kivy.core.window import Window
 
 #create colors for button
 grey = [1,1,1,1]
@@ -37,14 +38,11 @@ class PhoneApp(App):
         layout.add_widget(rightbtn)
         rightbtn.bind(on_press=self.pressButton)
         
+        #label showing which button was pressed
         label = Label(text = "No Button Pressed!",size_hint = (.5,.5),pos_hint = {'center_x':.5,'center_y':.5})
         layout.add_widget(label)
         
         return layout
-        
-    print('Buttons Created Successfully!')
-    
-    print('Text Created Successfully!')
     
     def pressButton(self, instance):
         if instance.text == "Up":
@@ -59,6 +57,8 @@ class PhoneApp(App):
         elif instance.text == "Left":
             print("Left Button Pressed!")
             self.root.children[0].text = "Left Button Pressed!"
+        elif instance.text == "Up" & instance.text == "Right":
+            print("up button and right button pressed")
         else:
             print("Unknown Button Pressed")
             self.root.children[0].text = "Unkown Button Pressed!"
