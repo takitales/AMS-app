@@ -45,6 +45,7 @@ class PhoneApp(App):
         
         return layout
     
+    #shows text of which button was pressed
     def pressButton(self, instance):
         if instance.text == "Up":
             print("Up Button Pressed!")
