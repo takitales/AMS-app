@@ -1,4 +1,4 @@
-#!C:\Users\daryn\OneDrive\Documents\University\Spring 2024\ECE 462\AMS-app\.venv\Scripts\python.exe
+#!C:\Users\sirde\OneDrive\Desktop\pissshitass\AMS-app\.venv\Scripts\python.exe
 # -*- coding: utf-8 -*-
 """
 Bottle is a fast and simple micro-framework for small web applications. It
