@@ -12,18 +12,19 @@ class wificommands():
                         s.sendall(command.encode())
                         data = s.recv(1024)
                         print('Received', repr(data))
-
-        # Connect to ESP32 and send commands
-        while True:
-                command = input("Enter command (on/off): ")
-                if command.lower() == 'on':
-                        command = 'o'
-                else:
-                        command = 'f'
                         
-                if command.lower() == 'o' or command.lower() == 'f':
-                        print("Sending Command")
-                        send_command(command)
-                else:
-                        print("Invalid command. Please enter 'on' or 'off'.")
-                #time.sleep(1)
+        def config_command(command_config):
+                # Connect to ESP32 and send commands
+                if True:
+                        #command = input("Enter command (on/off): ")
+                        if command_config.lower() == 'up':
+                                command_config = 'u'
+                        elif command_config.lower() == 'down':
+                                command_config = 'd'
+                        elif command_config.lower() == 'left':
+                                command_config = 'l'
+                        elif command_config.lower() == 'right':
+                                command_config = 'r'
+
+                        send_command(command_config)
+                        #time.sleep(1)
