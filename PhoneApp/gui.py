@@ -51,7 +51,7 @@ class PhoneApp(App):
     def pressButton(self, instance):
         if instance.text == "Up":
             print("Up Button Pressed!")
-            self.root.children[0].text = "Up Button Pressed!"
+            self.root.children[0].text = "Cheese Button Pressed!"
             sendThis = 'u'
             wifitesting.wificommands.send_command(sendThis)
         elif instance.text == "Down":
