@@ -1,4 +1,4 @@
-from gui import PhoneApp
+from PhoneApp.gui import PhoneApp
 
 if __name__ == "__main__":
     app = PhoneApp()

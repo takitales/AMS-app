@@ -1,7 +1,7 @@
 import kivy
 import time
 import threading
-import wifitesting
+import PhoneApp.wifitesting as wifitesting
 
 
 from kivy.app import App
