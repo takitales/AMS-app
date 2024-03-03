@@ -1,7 +1,7 @@
 import kivy
 import time
 import threading
-import PhoneApp.wifitesting as wifitesting
+#import PhoneApp.wifitesting as wifitesting
 
 
 from kivy.app import App
@@ -14,6 +14,7 @@ from kivy.core.window import Window
 
 #create colors for button
 grey = [1,1,1,1]
+flag = 0
 #create class for button
 class PhoneApp(App):
     #Create Buttons and Press Functionality
@@ -49,11 +50,19 @@ class PhoneApp(App):
     
     #shows text of which button was pressed
     def pressButton(self, instance):
+        global flag
         if instance.text == "Up":
             print("Up Button Pressed!")
-            self.root.children[0].text = "Cheese Button Pressed!"
-            sendThis = 'u'
-            wifitesting.wificommands.send_command(sendThis)
+            if flag == 0:
+                self.root.children[0].text = "Up Button Pressed! and LED on"
+                sendThis = 'u'
+                #wifitesting.wificommands.send_command(sendThis)
+                flag = 1
+            else:
+                self.root.children[0].text = "Up Button Pressed! and LED off"
+                sendThis = 'u'
+                #wifitesting.wificommands.send_command(sendThis)
+                flag = 0
         elif instance.text == "Down":
             print("Down Button Pressed!")
             self.root.children[0].text = "Down Button Pressed!"
