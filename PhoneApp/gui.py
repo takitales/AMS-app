@@ -1,6 +1,8 @@
 import kivy
 import time
 import threading
+import wifitesting
+
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -8,14 +10,12 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.core.window import Window
-from wifitesting import wificommands #imports command sending
+#from wifitesting import wificommands #imports command sending
 
 #create colors for button
 grey = [1,1,1,1]
-
 #create class for button
 class PhoneApp(App):
-    
     #Create Buttons and Press Functionality
     def build(self):
         
@@ -52,7 +52,8 @@ class PhoneApp(App):
         if instance.text == "Up":
             print("Up Button Pressed!")
             self.root.children[0].text = "Up Button Pressed!"
-            wificommands.config_command(instance.text)
+            sendThis = 'u'
+            wifitesting.wificommands.send_command(sendThis)
         elif instance.text == "Down":
             print("Down Button Pressed!")
             self.root.children[0].text = "Down Button Pressed!"
