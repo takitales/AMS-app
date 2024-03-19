@@ -14,6 +14,7 @@ from kivy.core.window import Window
 #create colors for button
 grey = [1,1,1,1]
 flag = 0
+
 #create class for button
 class PhoneApp(App):
     #Create Buttons and Press Functionality
@@ -47,34 +48,61 @@ class PhoneApp(App):
         
         return layout
     
-    #shows text of which button was pressed
+    #shows text of which button was pressed and handle accordingly
     def pressButton(self, instance):
-        global flag
+        global upFlag
+        global rightFlag
+        global leftFlag
+        global downFlag
         if instance.text == "Up":
             print("Up Button Pressed!")
-            if flag == 0:
+            if upFlag == 0:
                 self.root.children[0].text = "Up Button Pressed! and LED on"
                 sendThis = 'u'
                 wifitesting.wificommands.send_command(sendThis)
-                flag = 1
+                upFlag = 1
             else:
                 self.root.children[0].text = "Up Button Pressed! and LED off"
                 sendThis = 'u'
                 wifitesting.wificommands.send_command(sendThis)
-                flag = 0
+                upFlag = 0
         elif instance.text == "Down":
-            print("Down Button Pressed!")
-            self.root.children[0].text = "Down Button Pressed!"
+            if downFlag == 0:
+                self.root.children[0].text = "Down Button Pressed! and LED on"
+                sendThis = 'd'
+                wifitesting.wificommands.send_command(sendThis)
+                downFlag = 1
+            else:
+                self.root.children[0].text = "Down Button Pressed! and LED off"
+                sendThis = 'd'
+                wifitesting.wificommands.send_command(sendThis)
+                downFlag = 0
         elif instance.text == "Right":
-            print("Right Button Pressed!")
-            self.root.children[0].text = "Right Button Pressed!"
+            if rightFlag == 0:
+                self.root.children[0].text = "Right Button Pressed! and LED on"
+                sendThis = 'r'
+                wifitesting.wificommands.send_command(sendThis)
+                rightFlag = 1
+            else:
+                self.root.children[0].text = "Right Button Pressed! and LED off"
+                sendThis = 'r'
+                wifitesting.wificommands.send_command(sendThis)
+                rightFlag = 0
         elif instance.text == "Left":
-            print("Left Button Pressed!")
-            self.root.children[0].text = "Left Button Pressed!"
+            if leftFlag == 0:
+                self.root.children[0].text = "Left Button Pressed! and LED on"
+                sendThis = 'l'
+                wifitesting.wificommands.send_command(sendThis)
+                leftFlag = 1
+            else:
+                self.root.children[0].text = "Left Button Pressed! and LED off"
+                sendThis = 'l'
+                wifitesting.wificommands.send_command(sendThis)
+                leftFlag = 0
         elif instance.text == "Up" & instance.text == "Right":
             print("up button and right button pressed")
         else:
             print("Unknown Button Pressed")
             self.root.children[0].text = "Unkown Button Pressed!"
             
-    print('Button Events Created Successfully!')
+    print('Button Events Created Successfully!') #shows in terminal if button events were created
