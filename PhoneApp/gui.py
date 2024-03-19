@@ -13,7 +13,10 @@ from kivy.core.window import Window
 
 #create colors for button
 grey = [1,1,1,1]
-flag = 0
+upFlag = 0
+rightFlag = 0
+leftFlag = 0
+downFlag = 0
 
 #create class for button
 class PhoneApp(App):
