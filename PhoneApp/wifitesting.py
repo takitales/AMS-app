@@ -1,7 +1,7 @@
 import socket
 import time
-
-ESP_IP = '192.168.1.12'  # Replace with the IP address of your ESP32
+#past ip address: 192.168.1.12
+ESP_IP = '192.168.137.232'  # Replace with the IP address of your ESP32
 ESP_PORT = 1234  # Choose a port number
 
 class wificommands():
