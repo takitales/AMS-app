@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "ESP32",
+			"path": "../../../../../PlatformIO/Projects/ESP32"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"esp_event.h": "c"
+		}
+	}
+}
