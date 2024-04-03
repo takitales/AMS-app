@@ -111,7 +111,6 @@ class PhoneApp(App):
         global leftFlag
         global downFlag
         if instance.text == "Up":
-            print("Up Button Pressed!")
             if upFlag == 0:
                 self.root.children[0].text = "Up Button Pressed! Flag set to 1. Moving up."
                 sendThis = 'u'
