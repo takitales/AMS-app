@@ -21,7 +21,7 @@ upFlag = 0
 rightFlag = 0
 leftFlag = 0
 downFlag = 0
-
+'''
 #class for gps box
 class GPSBox(Widget):
     def __init__(self,**kwargs):
@@ -52,7 +52,7 @@ class GPSBox(Widget):
     
     def clear_line(self, dt):
         self.line = Line(points=[],width=2)
-        
+'''
 
 #create class for button
 class PhoneApp(App):
