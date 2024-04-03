@@ -113,50 +113,48 @@ class PhoneApp(App):
         if instance.text == "Up":
             print("Up Button Pressed!")
             if upFlag == 0:
-                self.root.children[0].text = "Up Button Pressed! and LED on"
+                self.root.children[0].text = "Up Button Pressed! Flag set to 1. Moving up."
                 sendThis = 'u'
                 wifitesting.wificommands.send_command(sendThis)
                 upFlag = 1
             else:
-                self.root.children[0].text = "Up Button Pressed! and LED off"
+                self.root.children[0].text = "Up Button Pressed! Flag set to 0. Not Moving up."
                 sendThis = 'u'
                 wifitesting.wificommands.send_command(sendThis)
                 upFlag = 0
         elif instance.text == "Down":
             if downFlag == 0:
-                self.root.children[0].text = "Down Button Pressed! and LED on"
+                self.root.children[0].text = "Down Button Pressed! Flag set to 1. Moving down."
                 sendThis = 'd'
                 wifitesting.wificommands.send_command(sendThis)
                 downFlag = 1
             else:
-                self.root.children[0].text = "Down Button Pressed! and LED off"
+                self.root.children[0].text = "Down Button Pressed! Flag set to 0. Not Moving down."
                 sendThis = 'd'
                 wifitesting.wificommands.send_command(sendThis)
                 downFlag = 0
         elif instance.text == "Right":
             if rightFlag == 0:
-                self.root.children[0].text = "Right Button Pressed! and LED on"
+                self.root.children[0].text = "Right Button Pressed! Flag set to 1. Moving right."
                 sendThis = 'r'
                 wifitesting.wificommands.send_command(sendThis)
                 rightFlag = 1
             else:
-                self.root.children[0].text = "Right Button Pressed! and LED off"
+                self.root.children[0].text = "Right Button Pressed! Flag set to 0. Not Moving right."
                 sendThis = 'r'
                 wifitesting.wificommands.send_command(sendThis)
                 rightFlag = 0
         elif instance.text == "Left":
             if leftFlag == 0:
-                self.root.children[0].text = "Left Button Pressed! and LED on"
+                self.root.children[0].text = "Left Button Pressed! Flag set to 1. Moving left."
                 sendThis = 'l'
                 wifitesting.wificommands.send_command(sendThis)
                 leftFlag = 1
             else:
-                self.root.children[0].text = "Left Button Pressed! and LED off"
+                self.root.children[0].text = "Left Button Pressed! Flag set to 0. Not Moving left."
                 sendThis = 'l'
                 wifitesting.wificommands.send_command(sendThis)
                 leftFlag = 0
-        elif instance.text == "Up" & instance.text == "Right":
-            print("up button and right button pressed")
         else:
             print("Unknown Button Pressed")
             self.root.children[0].text = "Unkown Button Pressed!"
