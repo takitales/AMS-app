@@ -13,15 +13,12 @@ from kivy.core.window import Window
 from kivy.graphics import Color, Ellipse, Line
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
+from kivy.uix.textinput import TextInput
 
 
 #create colors for button
 grey = [1,1,1,1]
-upFlag = 0
-rightFlag = 0
-leftFlag = 0
-downFlag = 0
-'''
+ESP_IP = '192.168.1.69'
 #class for gps box
 class GPSBox(Widget):
     def __init__(self,**kwargs):
@@ -52,111 +49,142 @@ class GPSBox(Widget):
     
     def clear_line(self, dt):
         self.line = Line(points=[],width=2)
-'''
+
+
+class PushHoldButton(Button):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.register_event_type('on_hold')
+        self.hold_trigger = None
+        self.is_holding = False
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.is_holding = True
+            self.hold_trigger = Clock.schedule_interval(self.check_hold, 0.1)
+            return True
+        return super().on_touch_down(touch)
+
+    def on_touch_up(self, touch):
+        if self.hold_trigger:
+            self.is_holding = False
+            self.hold_trigger.cancel()
+            self.hold_trigger = None
+
+            # Set flag value to 0
+            flag_name = self.text.lower() + "Flag"
+            setattr(App.get_running_app(), flag_name, 0)
+
+            # Update the label text
+            layout = App.get_running_app().root
+            layout.children[0].text = "No Button Pressed!"
+            
+            #send stop command
+            wifitesting.wificommands.send_command(ESP_IP,'s')
+
+            return True
+        return super().on_touch_up(touch)
+
+    def check_hold(self, dt):
+        self.dispatch('on_hold')
+
+    def on_hold(self, *args):
+        match self.text:
+            case "Up":
+                wifitesting.wificommands.send_command(ESP_IP,'u')
+            case "Right":
+                wifitesting.wificommands.send_command(ESP_IP,'r')
+            case "Left":
+                wifitesting.wificommands.send_command(ESP_IP,'l')
+            case "Down":
+                wifitesting.wificommands.send_command(ESP_IP,'d')
+
+
 
 #create class for button
 class PhoneApp(App):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.ip_textinput = None
     
-    #Create Buttons and Press Functionality
+    def on_connect_button_pressed(self, instance):
+        global ESP_IP
+        if self.ip_textinput:
+            ip_address = self.ip_textinput.text
+            # You can perform connection logic here using the entered IP address
+            print("Connecting to:", ip_address)
+            ESP_IP = ip_address  # Update the ESP32 IP address
+            # You may want to add error handling here
+    
+    # Handle actions when button is held down
+    def holdButton(self, instance):
+        flag_name = instance.text.lower() + "Flag"
+        flag_value = 1 if instance.is_holding else 0
+        print(flag_value)
+        setattr(self, flag_name, flag_value)
+
+        # Get the instances of buttons from the layout
+        layout = self.root
+        upbtn = layout.children[1]
+        downbtn = layout.children[2]
+        leftbtn = layout.children[3]
+        rightbtn = layout.children[4]
+
+        # Check if any button is being held down
+        if not any(btn.is_holding for btn in [upbtn, downbtn, leftbtn, rightbtn]):
+            self.root.children[0].text = "No Button Pressed!"
+        else:
+            pressed_buttons = [btn.text for btn in [upbtn, downbtn, leftbtn, rightbtn] if btn.is_holding]
+            self.root.children[0].text = f"{', '.join(pressed_buttons)} Button(s) Pressed!"
+
+
+
+
+    # Create Buttons and Press Functionality
     def build(self):
         layout = FloatLayout()
-        #gps box
-        gps_box = GPSBox(size_hint = (None,None), size=(200,200), pos=(0,0))
-        layout.add_widget(gps_box)
+
+        #text input
+        self.ip_textinput = TextInput(
+            hint_text = "Enter Ip Address",
+            size_hint=(.5, None),
+            pos_hint={'center_x': .5, 'center_y': .6},
+            multiline = False
+        )
+        layout.add_widget(self.ip_textinput)
         
-        #simulate gps data update
-        def update_gps(dt):
-            
-            #simulate getting gps coordinates from gps module
-            latitude = random.uniform(-90,90)
-            longitude = random.uniform(-180,180)
-            
-            #update dot position
-            gps_box.update_dot_position(latitude,longitude)
+        #connect button
+        connect_button = Button(
+            text="Connect",
+            size_hint=(.2, None),
+            pos_hint={'center_x': .5, 'center_y': .5},
+            on_press=self.on_connect_button_pressed
+        )
+        layout.add_widget(connect_button)
         
-        #update gps data
-        Clock.schedule_interval(update_gps, 1.0)
-        
-        #add up button
-        upbtn = Button(text = "Up",size_hint = (.1,.1),pos_hint = {'center_x': .8, 'center_y':.4},background_color = grey)
+        # add up button
+        upbtn = PushHoldButton(text="Up", size_hint=(.1, .1), pos_hint={'center_x': .8, 'center_y': .4}, background_color=grey)
         layout.add_widget(upbtn)
-        upbtn.bind(on_press=self.pressButton)
-        
-        #add down button
-        downbtn = Button(text = "Down",size_hint = (.1,.1),pos_hint = {'center_x': .8, 'center_y':.1},background_color = grey)
+        upbtn.bind(on_hold=self.holdButton)
+
+        # add down button
+        downbtn = PushHoldButton(text="Down", size_hint=(.1, .1), pos_hint={'center_x': .8, 'center_y': .1}, background_color=grey)
         layout.add_widget(downbtn)
-        downbtn.bind(on_press=self.pressButton)
-        
-        #left button
-        leftbtn = Button(text = "Left",size_hint = (.1,.1),pos_hint = {'center_x': .7, 'center_y':.25},background_color = grey)
+        downbtn.bind(on_hold=self.holdButton)
+
+        # left button
+        leftbtn = PushHoldButton(text="Left", size_hint=(.1, .1), pos_hint={'center_x': .7, 'center_y': .25}, background_color=grey)
         layout.add_widget(leftbtn)
-        leftbtn.bind(on_press=self.pressButton)
-        
-        
-        #right button
-        rightbtn = Button(text = "Right",size_hint = (.1,.1),pos_hint = {'center_x': .9, 'center_y':.25},background_color = grey)
+        leftbtn.bind(on_hold=self.holdButton)
+
+        # right button
+        rightbtn = PushHoldButton(text="Right", size_hint=(.1, .1), pos_hint={'center_x': .9, 'center_y': .25}, background_color=grey)
         layout.add_widget(rightbtn)
-        rightbtn.bind(on_press=self.pressButton)
+        rightbtn.bind(on_hold=self.holdButton)
         
-        #label showing which button was pressed
-        label = Label(text = "No Button Pressed!",size_hint = (.5,.5),pos_hint = {'center_x':.5,'center_y':.5})
+        # label showing which button was pressed
+        label = Label(text="No Button Pressed!", size_hint=(.5, .5), pos_hint={'center_x': .5, 'center_y': .9})
         layout.add_widget(label)
-        
+
         return layout
-    
-    #shows text of which button was pressed and handle accordingly
-    def pressButton(self, instance):
-        global upFlag
-        global rightFlag
-        global leftFlag
-        global downFlag
-        if instance.text == "Up":
-            if upFlag == 0:
-                self.root.children[0].text = "Up Button Pressed! Flag set to 1. Moving up."
-                sendThis = 'u'
-                wifitesting.wificommands.send_command(sendThis)
-                upFlag = 1
-            else:
-                self.root.children[0].text = "Up Button Pressed! Flag set to 0. Not Moving up."
-                sendThis = 'u'
-                wifitesting.wificommands.send_command(sendThis)
-                upFlag = 0
-        elif instance.text == "Down":
-            if downFlag == 0:
-                self.root.children[0].text = "Down Button Pressed! Flag set to 1. Moving down."
-                sendThis = 'd'
-                wifitesting.wificommands.send_command(sendThis)
-                downFlag = 1
-            else:
-                self.root.children[0].text = "Down Button Pressed! Flag set to 0. Not Moving down."
-                sendThis = 'd'
-                wifitesting.wificommands.send_command(sendThis)
-                downFlag = 0
-        elif instance.text == "Right":
-            if rightFlag == 0:
-                self.root.children[0].text = "Right Button Pressed! Flag set to 1. Moving right."
-                sendThis = 'r'
-                wifitesting.wificommands.send_command(sendThis)
-                rightFlag = 1
-            else:
-                self.root.children[0].text = "Right Button Pressed! Flag set to 0. Not Moving right."
-                sendThis = 'r'
-                wifitesting.wificommands.send_command(sendThis)
-                rightFlag = 0
-        elif instance.text == "Left":
-            if leftFlag == 0:
-                self.root.children[0].text = "Left Button Pressed! Flag set to 1. Moving left."
-                sendThis = 'l'
-                wifitesting.wificommands.send_command(sendThis)
-                leftFlag = 1
-            else:
-                self.root.children[0].text = "Left Button Pressed! Flag set to 0. Not Moving left."
-                sendThis = 'l'
-                wifitesting.wificommands.send_command(sendThis)
-                leftFlag = 0
-        else:
-            print("Unknown Button Pressed")
-            self.root.children[0].text = "Unkown Button Pressed!"
-    
-            
-    print('Button Events Created Successfully!') #shows in terminal if button events were created
