@@ -156,7 +156,7 @@ class PhoneApp(App):
         #text input
         self.ip_textinput = TextInput(
             hint_text = "Enter Ip Address",
-            size_hint=(.5, None),
+            size_hint=(.4, None),
             pos_hint={'center_x': .5, 'center_y': .6},
             multiline = False
         )
@@ -166,7 +166,7 @@ class PhoneApp(App):
         connect_button = Button(
             text="Connect",
             size_hint=(.2, None),
-            pos_hint={'center_x': .5, 'center_y': .5},
+            pos_hint={'center_x': .5, 'center_y': .4},
             on_press=self.on_connect_button_pressed
         )
         layout.add_widget(connect_button)
@@ -197,7 +197,7 @@ class PhoneApp(App):
         rightbtn.bind(on_hold=self.holdButton)
         
         # label showing which button was pressed
-        label = Label(text="No Button Pressed!", size_hint=(.5, .5), pos_hint={'center_x': .5, 'center_y': .9})
+        label = Label(text=" ", size_hint=(.5, .5), pos_hint={'center_x': .5, 'center_y': .9})
         layout.add_widget(label)
 
         return layout
