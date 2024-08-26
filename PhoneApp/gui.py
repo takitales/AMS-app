@@ -50,21 +50,25 @@ class GPSBox(Widget):
     def clear_line(self, dt):
         self.line = Line(points=[],width=2)
 
-
+# detects buttons being held
 class PushHoldButton(Button):
+    
+    # creating initializations
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.register_event_type('on_hold')
         self.hold_trigger = None
         self.is_holding = False
-
+        
+    # checking if button is pressed
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
             self.is_holding = True
             self.hold_trigger = Clock.schedule_interval(self.check_hold, 0.1)
             return True
         return super().on_touch_down(touch)
-
+    
+    # checking if button is released
     def on_touch_up(self, touch):
         if self.hold_trigger:
             self.is_holding = False
@@ -85,9 +89,11 @@ class PushHoldButton(Button):
             return True
         return super().on_touch_up(touch)
 
+    # checks if button is being held
     def check_hold(self, dt):
         self.dispatch('on_hold')
 
+    # checks which button is pressed and sends command over to esp to deal with character press
     def on_hold(self, *args):
         match self.text:
             case "Up":
@@ -98,6 +104,8 @@ class PushHoldButton(Button):
                 wifitesting.wificommands.send_command(ESP_IP,'l')
             case "Down":
                 wifitesting.wificommands.send_command(ESP_IP,'d')
+            case "Manual":
+                wifitesting.wificommands.send_command(ESP_IP,'m')
 
 
 
@@ -162,6 +170,11 @@ class PhoneApp(App):
             on_press=self.on_connect_button_pressed
         )
         layout.add_widget(connect_button)
+        
+        # add manual mode to take over robot
+        manbtn = PushHoldButton(text = "Manual", size_hint=(.1,.1), pos_hint={'center_x':.1,'center_y':.1}, background_color = grey)
+        layout.add_widget(manbtn)
+        manbtn.bind(on_hold=self.holdButton)
         
         # add up button
         upbtn = PushHoldButton(text="Up", size_hint=(.1, .1), pos_hint={'center_x': .8, 'center_y': .4}, background_color=grey)
