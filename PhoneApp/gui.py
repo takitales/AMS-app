@@ -1,7 +1,6 @@
 import kivy
 import asyncio
 import threading
-import random
 import jnius
 
 from kivy.app import App
@@ -77,6 +76,7 @@ class PhoneApp(App):
         super().__init__(**kwargs)
         self.ip_textinput = None
         self.adapter = BluetoothAdapter.getDefaultAdapter()
+        self.status_label = None
 
     def connect_bluetooth(self, address):
         global ble_socket
@@ -86,11 +86,16 @@ class PhoneApp(App):
 
         try:
             ble_socket.connect()
+            self.update_status_label("Connected to Bluetooth device")
             print(f"Connected to Bluetooth device: {address}")
         except Exception as e:
-            print(f"Failed to connect: {e}")
+            self.update_status_label(f"Failed to connect: {e}")
             ble_socket = None
-    
+
+    def update_status_label(self, text):
+        if self.status_label:
+            self.status_label.text = text
+
     def on_connect_button_pressed(self, instance):
         if self.ip_textinput:
             ble_address = self.ip_textinput.text
@@ -172,7 +177,7 @@ class PhoneApp(App):
         rightbtn.bind(on_hold=self.holdButton)
 
         # Label for button feedback
-        label = Label(text=" ", size_hint=(.5, .5), pos_hint={'center_x': .5, 'center_y': .9})
-        layout.add_widget(label)
+        self.status_label = Label(text=" ", size_hint=(.5, .5), pos_hint={'center_x': .5, 'center_y': .9})
+        layout.add_widget(self.status_label)
 
         return layout
