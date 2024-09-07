@@ -1,31 +1,31 @@
 import kivy
 import time
-import asyncio
 import threading
-import PhoneApp.wifitesting as wifitesting
-import random
-
-from bleak import BleakClient, BleakError, BleakScanner
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from kivy.core.window import Window
-from kivy.graphics import Color, Ellipse, Line
-from kivy.uix.widget import Widget
-from kivy.clock import Clock
 from kivy.uix.textinput import TextInput
 from kivy.clock import Clock
+from jnius import autoclass, cast
 
 # Create colors for button
 grey = [1, 1, 1, 1]
+
+# Android Bluetooth classes
+BluetoothAdapter = autoclass('android.bluetooth.BluetoothAdapter')
+BluetoothDevice = autoclass('android.bluetooth.BluetoothDevice')
+BluetoothSocket = autoclass('android.bluetooth.BluetoothSocket')
+ParcelUuid = autoclass('android.os.ParcelUuid')
+BluetoothGatt = autoclass('android.bluetooth.BluetoothGatt')
+BluetoothGattCallback = autoclass('android.bluetooth.BluetoothGattCallback')
+BluetoothGattCharacteristic = autoclass('android.bluetooth.BluetoothGattCharacteristic')
 
 # Detects buttons being held
 class PushHoldButton(Button):
     def __init__(self, app_instance, **kwargs):
         super().__init__(**kwargs)
-        self.app_instance = app_instance  # Store the reference in PhoneApp
+        self.app_instance = app_instance
         self.register_event_type('on_hold')
         self.hold_trigger = None
         self.is_holding = False
@@ -43,16 +43,13 @@ class PushHoldButton(Button):
             self.hold_trigger.cancel()
             self.hold_trigger = None
 
-            # Set flag value to 0
             flag_name = self.text.lower() + "Flag"
             setattr(self.app_instance, flag_name, 0)
 
-            # Update the label text
             layout = self.app_instance.root
             layout.children[0].text = "No Button Pressed!"
 
-            # Send stop command
-            asyncio.ensure_future(self.app_instance.send_command_over_bluetooth('s'))  # Call send_command_over_bluetooth
+            Clock.schedule_once(lambda dt: self.app_instance.send_command_over_bluetooth('s'))
 
             return True
         return super().on_touch_up(touch)
@@ -69,7 +66,7 @@ class PushHoldButton(Button):
             "Manual": 'm'
         }.get(self.text, '')
         if command:
-            asyncio.ensure_future(self.app_instance.send_command_over_bluetooth(command))
+            Clock.schedule_once(lambda dt: self.app_instance.send_command_over_bluetooth(command))
 
 class PhoneApp(App):
     def __init__(self, **kwargs):
@@ -78,36 +75,46 @@ class PhoneApp(App):
         self.connected = False
         self.client = None
         self.characteristic_uuid = None
+        self.bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
+        self.bluetooth_device = None
+        self.bluetooth_socket = None
 
-    async def connect_to_ble_device_by_address(self, address):
+    def connect_to_ble_device_by_address(self, address):
         """Connects to the BLE device using the provided address."""
-        self.client = BleakClient(address)
+        if not self.bluetooth_adapter.isEnabled():
+            print("Bluetooth is not enabled.")
+            return
+
+        # Assuming address is a valid Bluetooth MAC address
+        devices = self.bluetooth_adapter.getBondedDevices()
+        for device in devices:
+            if device.getAddress() == address:
+                self.bluetooth_device = device
+                break
+
+        if not self.bluetooth_device:
+            print("Device not found.")
+            return
+
+        # Create a BluetoothSocket and connect
+        uuid = ParcelUuid.fromString("0000xxxx-0000-1000-8000-00805F9B34FB")  # Replace with the UUID you need
+        self.bluetooth_socket = self.bluetooth_device.createRfcommSocketToServiceRecord(uuid.getUuid())
         try:
-            await self.client.connect()
-            self.connected = self.client.is_connected
+            self.bluetooth_socket.connect()
+            self.connected = True
             print(f"Connected to: {address}")
-
-            # Automatically find the first writable characteristic
-            services = await self.client.get_services()
-            for service in services:
-                for char in service.characteristics:
-                    if 'write' in char.properties:
-                        self.characteristic_uuid = char.uuid
-                        print(f"Found writable characteristic: {self.characteristic_uuid}")
-                        return  # Stop after finding the first writable characteristic
-
-        except BleakError as e:
+        except Exception as e:
             self.connected = False
-            print(f"Error connecting to BLE device: {e}")
+            print(f"Error connecting to Bluetooth device: {e}")
 
-    async def send_command_over_bluetooth(self, command):
-        """Sends a command to the ESP32 via Bluetooth."""
+    def send_command_over_bluetooth(self, command):
+        """Sends a command to the Bluetooth device."""
         try:
-            if self.connected and self.client.is_connected and self.characteristic_uuid:
-                await self.client.write_gatt_char(self.characteristic_uuid, command.encode())
+            if self.connected and self.bluetooth_socket:
+                self.bluetooth_socket.getOutputStream().write(command.encode())
                 print(f"Sent: {command}")
             else:
-                print("Device not connected or characteristic not found.")
+                print("Device not connected or socket not found.")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -115,16 +122,7 @@ class PhoneApp(App):
         """Called when the connect button is pressed."""
         ble_address = self.ip_textinput.text
         if ble_address:
-            threading.Thread(target=self.run_ble_scan, args=(ble_address,)).start()  # Pass the address to the scan function
-
-    def run_ble_scan(self, address):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.connect_to_ble_device_by_address(address))
-        if self.connected:
-            self.root.children[0].text = "Connected"
-        else:
-            self.root.children[0].text = "Failed to Connect"
+            threading.Thread(target=self.connect_to_ble_device_by_address, args=(ble_address,)).start()
 
     def holdButton(self, instance):
         flag_name = instance.text.lower() + "Flag"
@@ -132,7 +130,6 @@ class PhoneApp(App):
         print(flag_value)
         setattr(self, flag_name, flag_value)
 
-        # Get the instances of buttons from the layout
         layout = self.root
         buttons = {btn.text: btn for btn in layout.children[1:]}
         upbtn = buttons.get("Up")
@@ -140,7 +137,6 @@ class PhoneApp(App):
         leftbtn = buttons.get("Left")
         rightbtn = buttons.get("Right")
 
-        # Check if any button is being held down
         if not any(btn.is_holding for btn in [upbtn, downbtn, leftbtn, rightbtn] if btn):
             self.root.children[0].text = "No Button Pressed!"
         else:
