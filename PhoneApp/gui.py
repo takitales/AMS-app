@@ -1,8 +1,9 @@
 import kivy
 import time
 import threading
-import PhoneApp.wifitesting as wifitesting
 import random
+import asyncio 
+from bleak import BleakScanner, BleakClient
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -18,38 +19,15 @@ from kivy.uix.textinput import TextInput
 
 #create colors for button
 grey = [1,1,1,1]
-ESP_IP = '192.168.1.69'
-#class for gps box
-class GPSBox(Widget):
-    def __init__(self,**kwargs):
-        super(GPSBox, self).__init__(**kwargs)
-        with self.canvas:
-            Color(1,0,0) #color red
-            self.dot = Ellipse(pos=(100,100), size=(10,10)) #creates dot for tracking
-            self.line = Line(points=[],width=2)
-        self.prev_dot_pos = (100, 100)  # Initialize previous dot position
-        
-        
-    def update_dot_position(self,latitude,longitude):
-        #convert gps coordinates to position in the box
-        box_width, box_height = self.size
-        x = (longitude/360.0) * box_width
-        y = (latitude/360.0) * box_height
-        new_pos = (self.center_x + x - 5, self.center_y + y - 5) #adjusts offset for smaller box
 
-        #Draw line between previous and new positions
-        with self.canvas:
-            Color(1, 0, 0)  #Set line color
-            Line(points=[self.prev_dot_pos[0] + 5, self.prev_dot_pos[1] + 5, new_pos[0] + 5, new_pos[1] + 5], width=2)
-        
-        self.dot.pos = new_pos  #Update dot position
-        self.prev_dot_pos = new_pos  #Update previous dot position
-        
-        Clock.schedule_once(self.clear_line, 1.0)
-    
-    def clear_line(self, dt):
-        self.line = Line(points=[],width=2)
+async def read_characteristic(client,char_uuid):
+    value = await client.read_gatt_char(char_uuid)
+    print(f"characteristic value: {value}")
 
+async def write_characteristic(client, char_uuid, value):
+    await client.write_gatt_char(char_uuid, value)
+    print("Write Successful")
+  
 # detects buttons being held
 class PushHoldButton(Button):
     
@@ -82,9 +60,6 @@ class PushHoldButton(Button):
             # Update the label text
             layout = App.get_running_app().root
             layout.children[0].text = "No Button Pressed!"
-            
-            #send stop command
-            wifitesting.wificommands.send_command(ESP_IP,'s')
 
             return True
         return super().on_touch_up(touch)
@@ -97,15 +72,15 @@ class PushHoldButton(Button):
     def on_hold(self, *args):
         match self.text:
             case "Up":
-                wifitesting.wificommands.send_command(ESP_IP,'u')
+                print("idk")
             case "Right":
-                wifitesting.wificommands.send_command(ESP_IP,'r')
+                print("pizza")
             case "Left":
-                wifitesting.wificommands.send_command(ESP_IP,'l')
+                print("ahhh")
             case "Down":
-                wifitesting.wificommands.send_command(ESP_IP,'d')
+                print("something")
             case "Manual":
-                wifitesting.wificommands.send_command(ESP_IP,'m')
+                print("hi")
 
 
 
@@ -116,14 +91,14 @@ class PhoneApp(App):
         super().__init__(**kwargs)
         self.ip_textinput = None
     
+    #change to bluetooth unless i can figure out how to automatically connect to bluetooth
     def on_connect_button_pressed(self, instance):
         global ESP_IP
         if self.ip_textinput:
             ip_address = self.ip_textinput.text
-            # You can perform connection logic here using the entered IP address
+            
             print("Connecting to:", ip_address)
             ESP_IP = ip_address  # Update the ESP32 IP address
-            # You may want to add error handling here
     
     # Handle actions when button is held down
     def holdButton(self, instance):
@@ -146,13 +121,10 @@ class PhoneApp(App):
             pressed_buttons = [btn.text for btn in [upbtn, downbtn, leftbtn, rightbtn] if btn.is_holding]
             self.root.children[0].text = f"{', '.join(pressed_buttons)} Button(s) Pressed!"
 
-
-
-
     # Create Buttons and Press Functionality
     def build(self):
         layout = FloatLayout()
-
+        
         #text input
         self.ip_textinput = TextInput(
             hint_text = "Enter Ip Address",
