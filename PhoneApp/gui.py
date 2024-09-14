@@ -2,9 +2,12 @@ import kivy
 import time
 import threading
 import random
-import asyncio 
-from bleak import BleakScanner, BleakClient
+import asyncio
 
+from btFunction import sendSerialData
+from btFunction import connectBLE
+
+#kivy imports
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
@@ -20,14 +23,12 @@ from kivy.uix.textinput import TextInput
 #create colors for button
 grey = [1,1,1,1]
 
-async def read_characteristic(client,char_uuid):
-    value = await client.read_gatt_char(char_uuid)
-    print(f"characteristic value: {value}")
+#info for bluetooth
+global deviceAddress
+global characteristicUUID 
+deviceAddress = "B0:B2:1C:51:E6:A6"
+characteristicUUID = "0eea86fb-1900-4348-9d86-d4ad7412df58"
 
-async def write_characteristic(client, char_uuid, value):
-    await client.write_gatt_char(char_uuid, value)
-    print("Write Successful")
-  
 # detects buttons being held
 class PushHoldButton(Button):
     
@@ -72,7 +73,7 @@ class PushHoldButton(Button):
     def on_hold(self, *args):
         match self.text:
             case "Up":
-                print("idk")
+                print("hik")
             case "Right":
                 print("pizza")
             case "Left":
@@ -86,19 +87,15 @@ class PushHoldButton(Button):
 
 #create class for button
 class PhoneApp(App):
-
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ip_textinput = None
     
     #change to bluetooth unless i can figure out how to automatically connect to bluetooth
     def on_connect_button_pressed(self, instance):
-        global ESP_IP
-        if self.ip_textinput:
-            ip_address = self.ip_textinput.text
-            
-            print("Connecting to:", ip_address)
-            ESP_IP = ip_address  # Update the ESP32 IP address
+            #connect to bluetooth
+            connectBLE(deviceAddress)
     
     # Handle actions when button is held down
     def holdButton(self, instance):
@@ -127,7 +124,7 @@ class PhoneApp(App):
         
         #text input
         self.ip_textinput = TextInput(
-            hint_text = "Enter Ip Address",
+            hint_text = "Enter BT Address",
             size_hint=(.4, None),
             pos_hint={'center_x': .5, 'center_y': .6},
             multiline = False
