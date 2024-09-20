@@ -1,7 +1,8 @@
 import asyncio
 from bleak import BleakClient
 
-deviceAddress = "B0:B2:1C:51:E6:A6"
+deviceAddress = "E8:31:CD:C4:DE:7E" 
+#"B0:B2:1C:51:E6:A6"
 characteristicUUID = "0eea86fb-1900-4348-9d86-d4ad7412df58"
 
 async def connectBLE(address):
@@ -25,4 +26,8 @@ async def sendSerialData(data):
         print(f"An error ocurred: {e}")
 asyncio.run(connectBLE(deviceAddress))
 asyncio.run(sendSerialData("u"))
-asyncio.run(sendSerialData("u"))
+# asyncio.run(sendSerialData("d"))
+# asyncio.run(sendSerialData("l"))
+# asyncio.run(sendSerialData("r"))
+# asyncio.run(sendSerialData("r"))
+# asyncio.run(sendSerialData("l"))

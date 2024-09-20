@@ -4,6 +4,8 @@ import threading
 import random
 import asyncio
 
+from bleak import BleakClient
+
 from btFunction import sendSerialData
 from btFunction import connectBLE
 
@@ -92,11 +94,6 @@ class PhoneApp(App):
         super().__init__(**kwargs)
         self.ip_textinput = None
     
-    #change to bluetooth unless i can figure out how to automatically connect to bluetooth
-    def on_connect_button_pressed(self, instance):
-            #connect to bluetooth
-            connectBLE(deviceAddress)
-    
     # Handle actions when button is held down
     def holdButton(self, instance):
         flag_name = instance.text.lower() + "Flag"
@@ -123,22 +120,22 @@ class PhoneApp(App):
         layout = FloatLayout()
         
         #text input
-        self.ip_textinput = TextInput(
-            hint_text = "Enter BT Address",
-            size_hint=(.4, None),
-            pos_hint={'center_x': .5, 'center_y': .6},
-            multiline = False
-        )
-        layout.add_widget(self.ip_textinput)
+        # self.ip_textinput = TextInput(
+            # hint_text = "Enter BT Address",
+            # size_hint=(.4, None),
+            # pos_hint={'center_x': .5, 'center_y': .6},
+            # multiline = False
+        # )
+        # layout.add_widget(self.ip_textinput)
         
         #connect button
-        connect_button = Button(
-            text="Connect",
-            size_hint=(.2, None),
-            pos_hint={'center_x': .5, 'center_y': .4},
-            on_press=self.on_connect_button_pressed
-        )
-        layout.add_widget(connect_button)
+        # connect_button = Button(
+            # text="Connect",
+            # size_hint=(.2, None),
+            # pos_hint={'center_x': .5, 'center_y': .4},
+            # on_press=self.on_connect_button_pressed
+        # )
+        # layout.add_widget(connect_button)
         
         # add manual mode to take over robot
         manbtn = PushHoldButton(text = "Manual", size_hint=(.1,.1), pos_hint={'center_x':.1,'center_y':.1}, background_color = grey)
