@@ -5,9 +5,7 @@ import random
 import asyncio
 
 from bleak import BleakClient
-
 from btFunction import sendSerialData
-from btFunction import connectBLE
 
 #kivy imports
 from kivy.app import App
@@ -24,12 +22,6 @@ from kivy.uix.textinput import TextInput
 
 #create colors for button
 grey = [1,1,1,1]
-
-#info for bluetooth
-global deviceAddress
-global characteristicUUID 
-deviceAddress = "B0:B2:1C:51:E6:A6"
-characteristicUUID = "0eea86fb-1900-4348-9d86-d4ad7412df58"
 
 # detects buttons being held
 class PushHoldButton(Button):
@@ -75,15 +67,20 @@ class PushHoldButton(Button):
     def on_hold(self, *args):
         match self.text:
             case "Up":
-                print("hik")
+                # print("hik")
+                asyncio.run(sendSerialData("u"))
             case "Right":
-                print("pizza")
+                # print("pizza")
+                asyncio.run(sendSerialData("r"))
             case "Left":
-                print("ahhh")
+                # print("ahhh")
+                asyncio.run(sendSerialData("l"))
             case "Down":
-                print("something")
+                # print("something")
+                asyncio.run(sendSerialData("d"))
             case "Manual":
-                print("hi")
+                # print("hi")
+                asyncio.run(sendSerialData("m"))
 
 
 

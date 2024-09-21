@@ -1,8 +1,9 @@
 import asyncio
 from bleak import BleakClient
 
-deviceAddress = "E8:31:CD:C4:DE:7E" 
-#"B0:B2:1C:51:E6:A6"
+deviceAddress = "B0:B2:1C:51:E6:A6"
+#"E8:31:CD:C4:DE:7E"  robot esp32
+#"B0:B2:1C:51:E6:A6" my esp32
 characteristicUUID = "0eea86fb-1900-4348-9d86-d4ad7412df58"
 
 async def connectBLE(address):
@@ -25,7 +26,7 @@ async def sendSerialData(data):
     except Exception as e:
         print(f"An error ocurred: {e}")
 asyncio.run(connectBLE(deviceAddress))
-asyncio.run(sendSerialData("u"))
+# asyncio.run(sendSerialData("u"))
 # asyncio.run(sendSerialData("d"))
 # asyncio.run(sendSerialData("l"))
 # asyncio.run(sendSerialData("r"))
