@@ -1,5 +1,5 @@
 import asyncio
-from btFunction import connectBLE
+# from btFunction import connectBLE
 from PhoneApp.gui import PhoneApp
 
 if __name__ == "__main__":

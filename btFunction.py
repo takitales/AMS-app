@@ -25,7 +25,7 @@ async def sendSerialData(data):
                     # print("Data sent Successfully")
     # except Exception as e:
         # print(f"An error ocurred: {e}")
-asyncio.run(connectBLE(deviceAddress))
+# asyncio.run(connectBLE(deviceAddress))
 # asyncio.run(sendSerialData("u"))
 # asyncio.run(sendSerialData("d"))
 # asyncio.run(sendSerialData("l"))

@@ -6,6 +6,7 @@ import asyncio
 
 from bleak import BleakClient
 from btFunction import sendSerialData
+from btFunction import connectBLE
 
 #kivy imports
 from kivy.app import App
