@@ -77,19 +77,20 @@ class PushHoldButton(Button):
         match self.text:
             case "Up":
                 # print("hik")
-                asyncio.run(send_data(deviceAddress,"u"))
+                self.root.children[0].text = "sending data"
+                asyncio.run(send_data(btsocket,"u"))
             case "Right":
                 # print("pizza")
-                asyncio.run(send_data(deviceAddress,"r"))
+                asyncio.run(send_data(btsocket,"r"))
             case "Left":
                 # print("ahhh")
-                asyncio.run(send_data(deviceAddress,"l"))
+                asyncio.run(send_data(btsocket,"l"))
             case "Down":
                 # print("something")
-                asyncio.run(send_data(deviceAddress,"d"))
+                asyncio.run(send_data(btsocket,"d"))
             case "Manual":
                 # print("hi")
-                asyncio.run(send_data(deviceAddress,"m"))
+                asyncio.run(send_data(btsocket,"m"))
 
 
 
