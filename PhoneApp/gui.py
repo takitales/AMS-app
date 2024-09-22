@@ -4,9 +4,11 @@ import threading
 import random
 import asyncio
 
-from bleak import BleakClient
-from btFunction import sendSerialData
-from btFunction import connectBLE
+# from bleak import BleakClient
+# from btFunction import sendSerialData
+# from btFunction import connectBLE
+from btFunction import send_data #sending data function
+from btFunction import connect_to_device #connecting
 
 #kivy imports
 from kivy.app import App
@@ -20,6 +22,12 @@ from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.uix.textinput import TextInput
 
+
+
+deviceAddress = "B0:B2:1C:51:E6:A6"
+#"E8:31:CD:C4:DE:7E"  robot esp32
+#"B0:B2:1C:51:E6:A6" my esp32
+btsocket = connect_to_device(deviceAddress)
 
 #create colors for button
 grey = [1,1,1,1]
@@ -69,19 +77,19 @@ class PushHoldButton(Button):
         match self.text:
             case "Up":
                 # print("hik")
-                asyncio.run(sendSerialData("u"))
+                asyncio.run(send_data(deviceAddress,"u"))
             case "Right":
                 # print("pizza")
-                asyncio.run(sendSerialData("r"))
+                asyncio.run(send_data(deviceAddress,"r"))
             case "Left":
                 # print("ahhh")
-                asyncio.run(sendSerialData("l"))
+                asyncio.run(send_data(deviceAddress,"l"))
             case "Down":
                 # print("something")
-                asyncio.run(sendSerialData("d"))
+                asyncio.run(send_data(deviceAddress,"d"))
             case "Manual":
                 # print("hi")
-                asyncio.run(sendSerialData("m"))
+                asyncio.run(send_data(deviceAddress,"m"))
 
 
 
