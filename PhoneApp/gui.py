@@ -5,10 +5,9 @@ import random
 import asyncio
 
 # from bleak import BleakClient
-# from btFunction import sendSerialData
-# from btFunction import connectBLE
-from btFunction import send_data #sending data function
-from btFunction import connect_to_device #connecting
+from btFunction import sendSerialData
+from btFunction import connectBLE
+from bleak import BleakClient #import BleakClient
 
 #kivy imports
 from kivy.app import App
@@ -21,16 +20,83 @@ from kivy.graphics import Color, Ellipse, Line
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.uix.textinput import TextInput
+from concurrent.futures import ThreadPoolExecutor
 
 
-
-deviceAddress = "B0:B2:1C:51:E6:A6"
+deviceAddress = "E8:31:CD:C4:DE:7E"
 #"E8:31:CD:C4:DE:7E"  robot esp32
 #"B0:B2:1C:51:E6:A6" my esp32
-btsocket = connect_to_device(deviceAddress)
+#"B0:B2:1C:51:E5:EA" beacon esp32
 
 #create colors for button
 grey = [1,1,1,1]
+
+
+#handles the demo buttons to be a toggle to be pressed ones
+class toggleButton(Button):
+    # Initializations
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.register_event_type('on_hold')
+        self.is_toggled = False
+        self.hold_trigger = None
+        self.is_holding = False
+    
+    # Handling touch down
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.is_toggled = not self.is_toggled  # Toggle state
+            if self.is_toggled:
+                self.is_holding = True
+                self.hold_trigger = Clock.schedule_interval(self.check_hold, 0.1)
+            else:
+                self.reset_state()
+            return True
+        return super().on_touch_down(touch)
+
+     # Handling touch up
+    def on_touch_up(self, touch):
+        if self.hold_trigger and not self.is_toggled:
+            self.reset_state()
+            return True
+        return super().on_touch_up(touch)
+    
+   # Resetting the button state
+    def reset_state(self):
+        self.is_holding = False
+        if self.hold_trigger:
+            self.hold_trigger.cancel()
+            self.hold_trigger = None
+
+        # Reset the flag for the button
+        flag_name = self.text.lower() + "Flag"
+        setattr(App.get_running_app(), flag_name, 0)
+
+        # Update label to show no button is pressed
+        layout = App.get_running_app().root
+        layout.children[0].text = "No Button Pressed!"
+    
+    
+    # Checking hold status
+    def check_hold(self, dt):
+        if self.is_toggled and self.is_holding:
+            self.dispatch('on_hold')
+        else:
+            self.reset_state()
+            
+    # Handling the hold action
+    def on_hold(self, *args):
+        match self.text:
+            case "Demo_1":
+                asyncio.run(sendSerialData("m")) #sends 'm' to the robot to be handled
+                print("m")
+            case "Demo_2":
+                asyncio.run(sendSerialData("n"))
+                print("n")
+    
+        
+        
+        
 
 # detects buttons being held
 class PushHoldButton(Button):
@@ -76,21 +142,19 @@ class PushHoldButton(Button):
     def on_hold(self, *args):
         match self.text:
             case "Up":
-                # print("hik")
-                self.root.children[0].text = "sending data"
-                asyncio.run(send_data(btsocket,"u"))
+                asyncio.run(sendSerialData("u")) #sends 'u' through the server to be handled by the robot
             case "Right":
-                # print("pizza")
-                asyncio.run(send_data(btsocket,"r"))
+                asyncio.run(sendSerialData("r"))
             case "Left":
-                # print("ahhh")
-                asyncio.run(send_data(btsocket,"l"))
+                asyncio.run(sendSerialData("l"))
             case "Down":
-                # print("something")
-                asyncio.run(send_data(btsocket,"d"))
-            case "Manual":
-                # print("hi")
-                asyncio.run(send_data(btsocket,"m"))
+                asyncio.run(sendSerialData("d"))
+            case "Demo_1":
+                asyncio.run(sendSerialData("m"))
+                print("m")
+            case "Demo_2":
+                asyncio.run(sendSerialData("n"))
+                print("n")
 
 
 
@@ -100,7 +164,27 @@ class PhoneApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ip_textinput = None
+        self.client = None #initialize BleakClient
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.executor = ThreadPoolExecutor() #use a threadpoolexecutor
     
+    async def connect_to_device(self):
+        async with BleakClient(deviceAddress) as client:
+            self.client = client
+            await client.start_notify(
+                "0eea86fb-1900-4348-9d86-d4ad7412df58", #CHARACTERISTIC_UUID
+                self.notifcation_handler
+            )
+            
+    def update_label(self, message):
+        self.root.children[0].text = f"Received: {message}"
+        
+    def notifcation_handler(self, sender, data):
+        message = data.decode('utf-8')  # Decode the notification data
+        # Update the label with the received message
+        Clock.schedule_once(lambda dt: self.update_label(message))
+        
     # Handle actions when button is held down
     def holdButton(self, instance):
         flag_name = instance.text.lower() + "Flag"
@@ -121,31 +205,28 @@ class PhoneApp(App):
         else:
             pressed_buttons = [btn.text for btn in [upbtn, downbtn, leftbtn, rightbtn] if btn.is_holding]
             self.root.children[0].text = f"{', '.join(pressed_buttons)} Button(s) Pressed!"
-
+    
+    async def async_on_start(self):
+        await self.connect_to_device()
+        
+    def start_async_tasks(self):
+        self.loop.run_in_executor(self.executor, lambda: asyncio.run(self.async_on_start()))
+        
     # Create Buttons and Press Functionality
     def build(self):
         layout = FloatLayout()
         
-        #text input
-        # self.ip_textinput = TextInput(
-            # hint_text = "Enter BT Address",
-            # size_hint=(.4, None),
-            # pos_hint={'center_x': .5, 'center_y': .6},
-            # multiline = False
-        # )
-        # layout.add_widget(self.ip_textinput)
+        #initial connection
+        Clock.schedule_once(lambda dt: asyncio.ensure_future(self.async_on_start()))
         
-        #connect button
-        # connect_button = Button(
-            # text="Connect",
-            # size_hint=(.2, None),
-            # pos_hint={'center_x': .5, 'center_y': .4},
-            # on_press=self.on_connect_button_pressed
-        # )
-        # layout.add_widget(connect_button)
+        # Demo 2 button
+        cntbtn = PushHoldButton(text = "Demo_2", size_hint=(.1,.1), pos_hint={'center_x':.3,'center_y':.1}, background_color = grey)
+        layout.add_widget(cntbtn)
+        cntbtn.bind(on_hold=self.holdButton)
         
-        # add manual mode to take over robot
-        manbtn = PushHoldButton(text = "Manual", size_hint=(.1,.1), pos_hint={'center_x':.1,'center_y':.1}, background_color = grey)
+        
+        # Demo 1 button to showcase the robot moves with the app
+        manbtn = PushHoldButton(text = "Demo_1", size_hint=(.1,.1), pos_hint={'center_x':.1,'center_y':.1}, background_color = grey)
         layout.add_widget(manbtn)
         manbtn.bind(on_hold=self.holdButton)
         
@@ -174,3 +255,6 @@ class PhoneApp(App):
         layout.add_widget(label)
 
         return layout
+    
+    def on_stop(self):
+        self.executor.shutdown(wait=False)
