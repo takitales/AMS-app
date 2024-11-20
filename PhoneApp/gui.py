@@ -3,6 +3,7 @@ import time
 import threading
 import random
 import asyncio
+import webbrowser
 
 # from bleak import BleakClient
 from btFunction import sendSerialData
@@ -21,12 +22,17 @@ from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.uix.textinput import TextInput
 from concurrent.futures import ThreadPoolExecutor
+from kivy.lang import Builder
 
 
-deviceAddress = "E8:31:CD:C4:DE:7E"
+global buttonFlag
+
+deviceAddress = "AC:0B:FB:5C:C9:02"
 #"E8:31:CD:C4:DE:7E"  robot esp32
 #"B0:B2:1C:51:E6:A6" my esp32
 #"B0:B2:1C:51:E5:EA" beacon esp32
+#"AC:0B:FB:5C:C9:02" esp32 pico address
+
 
 #create colors for button
 grey = [1,1,1,1]
@@ -88,11 +94,20 @@ class toggleButton(Button):
     def on_hold(self, *args):
         match self.text:
             case "Demo_1":
-                asyncio.run(sendSerialData("m")) #sends 'm' to the robot to be handled
-                print("m")
+                if buttonFlag == 0:
+                    asyncio.run(sendSerialData("m")) #sends 'm' to the robot to be handled
+                    print("m")
+                    buttonFlag = 1
+                else:
+                    buttonFlag = 0
+                
             case "Demo_2":
-                asyncio.run(sendSerialData("n"))
-                print("n")
+                if buttonFlag == 0:
+                    asyncio.run(sendSerialData("n"))
+                    print("n")
+                    buttonFlag = 1
+                else:
+                    buttonFlag = 0
     
         
         
@@ -155,7 +170,16 @@ class PushHoldButton(Button):
             case "Demo_2":
                 asyncio.run(sendSerialData("n"))
                 print("n")
-
+            case "Live Feed":
+                print("L")
+                openHyperlink()
+                
+                
+                
+#function for opening links and having a button open a link
+def openHyperlink():
+    webbrowser.open('http://www.google.com')
+    print("opening link....")
 
 
 #create class for button
@@ -198,12 +222,15 @@ class PhoneApp(App):
         downbtn = layout.children[2]
         leftbtn = layout.children[3]
         rightbtn = layout.children[4]
+        manbtn = layout.children[5]
+        cntbtn = layout.children[6]
+        cameraButton = layout.children[7]
 
         # Check if any button is being held down
-        if not any(btn.is_holding for btn in [upbtn, downbtn, leftbtn, rightbtn]):
+        if not any(btn.is_holding for btn in [upbtn, downbtn, leftbtn, rightbtn, manbtn, cntbtn, cameraButton]):
             self.root.children[0].text = "No Button Pressed!"
         else:
-            pressed_buttons = [btn.text for btn in [upbtn, downbtn, leftbtn, rightbtn] if btn.is_holding]
+            pressed_buttons = [btn.text for btn in [upbtn, downbtn, leftbtn, rightbtn, manbtn, cntbtn, cameraButton] if btn.is_holding]
             self.root.children[0].text = f"{', '.join(pressed_buttons)} Button(s) Pressed!"
     
     async def async_on_start(self):
@@ -211,13 +238,19 @@ class PhoneApp(App):
         
     def start_async_tasks(self):
         self.loop.run_in_executor(self.executor, lambda: asyncio.run(self.async_on_start()))
-        
+    
+    
     # Create Buttons and Press Functionality
     def build(self):
         layout = FloatLayout()
         
         #initial connection
         Clock.schedule_once(lambda dt: asyncio.ensure_future(self.async_on_start()))
+        
+        # hyperlink button
+        cameraButton = PushHoldButton(text = "Lidar Data", size_hint=(.1,.1), pos_hint={'center_x':.5,'center_y':.1}, background_color = grey)
+        layout.add_widget(cameraButton)
+        cameraButton.bind(on_hold=self.holdButton)
         
         # Demo 2 button
         cntbtn = PushHoldButton(text = "Demo_2", size_hint=(.1,.1), pos_hint={'center_x':.3,'center_y':.1}, background_color = grey)

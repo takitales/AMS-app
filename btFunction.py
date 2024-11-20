@@ -1,7 +1,7 @@
 import asyncio
 from bleak import BleakClient
 
-deviceAddress = "E8:31:CD:C4:DE:7E"
+deviceAddress = "AC:0B:FB:5C:C9:02"
 #"E8:31:CD:C4:DE:7E"  robot esp32
 #"B0:B2:1C:51:E6:A6" my esp32
 characteristicUUID = "0eea86fb-1900-4348-9d86-d4ad7412df58"
